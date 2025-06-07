@@ -9,7 +9,7 @@ exports.identifier = (req, res, next) => {
 	}
 
 	if (!token) {
-		return res.status(403).json({ success: false, message: 'Unauthorized' });
+		return res.status(401).json({ success: false, message: 'No token provided' });
 	}
 
 	try {
@@ -19,9 +19,21 @@ exports.identifier = (req, res, next) => {
 			req.user = jwtVerified;
 			next();
 		} else {
-			throw new Error('error in the token');
+			throw new Error('Invalid token');
 		}
 	} catch (error) {
 		console.log(error);
+		if (error.name === 'TokenExpiredError') {
+			return res.status(401).json({ 
+				success: false, 
+				message: 'Token expired',
+				isExpired: true
+			});
+		}
+		return res.status(401).json({ 
+			success: false, 
+			message: 'Invalid token',
+			isExpired: false
+		});
 	}
 };
